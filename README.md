@@ -39,18 +39,19 @@ Windows 바탕화면 위에 상주하며 일정 관리 및 스티커 메모를 �
 ## 🛠️ 빌드 및 실행 방법
 
 ### 방법 1: Visual Studio 사용
-1. `DesktopCalendarWidget.sln` 파일을 **Visual Studio 2022** 이상에서 엽니다.
+1. `JustCalendar/DesktopCalendarWidget.sln` 파일을 **Visual Studio 2022** 이상(또는 JetBrains Rider)에서 엽니다.
    *(필수 구성 요소: .NET 데스크톱 개발 워크로드, .NET 8.0 SDK)*
 2. 상단 빌드 구성을 `Release` 또는 `Debug`로 설정하고 `F5` 키를 눌러 실행합니다.
 
 ### 방법 2: .NET CLI 터미널 사용
-프로젝트 폴더에서 다음 명령어를 실행합니다:
+저장소 루트에서 `JustCalendar` 폴더로 이동한 뒤 다음 명령어를 실행합니다:
 ```bash
+cd JustCalendar
 dotnet build -c Release
 dotnet run --project DesktopCalendarWidget
 ```
 
-단일 실행 파일(Single File)로 배포하려면:
+단일 실행 파일(Single File)로 배포하려면 (같은 `JustCalendar` 폴더에서):
 ```bash
 dotnet publish DesktopCalendarWidget -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
 ```
