@@ -1,0 +1,206 @@
+<Window x:Class="DesktopCalendarWidget.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Desktop Calendar" 
+        Width="920" Height="640"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
+        LocationChanged="Window_LocationChanged"
+        SizeChanged="Window_SizeChanged">
+    
+    <Window.Resources>
+        <!-- Flat Button Style -->
+        <Style x:Key="IconBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Margin" Value="3,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#66FFFFFF"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- Toggle Button Style for Pin -->
+        <Style x:Key="PinBtnStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#D9E74C3C"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Toggle Button Style for Routine widget (blue when open) -->
+        <Style x:Key="RoutineBtnStyle" TargetType="ToggleButton">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="8,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="border" Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="#D93498DB"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Opacity" Value="0.85"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="border" Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <!-- Main Widget Container -->
+    <Border x:Name="RootBorder" Background="#551B2A4A" CornerRadius="10" BorderBrush="#66FFFFFF" BorderThickness="1">
+        <Grid>
+            <DockPanel>
+                <!-- TOP CONTROL BAR -->
+                <Grid x:Name="TopBar" DockPanel.Dock="Top" Height="42" Background="#770D1B2A" MouseLeftButtonDown="TopBar_MouseLeftButtonDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Left: Memo Add (+), Opacity Slider -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
+                        <!-- Add Memo Button -->
+                        <Button x:Name="BtnAddMemo" Content="＋ 메모" Width="60" Height="26" Style="{StaticResource IconBtnStyle}" 
+                                Click="BtnAddMemo_Click" ToolTip="새 독립 메모장 생성"/>
+
+                        <TextBlock Text="투명도" Foreground="#CCFFFFFF" FontSize="11" VerticalAlignment="Center" Margin="12,0,6,0"/>
+                        <!-- Opacity Slider -->
+                        <Slider x:Name="SliderOpacity" Width="85" Minimum="0.25" Maximum="1.0" Value="0.85"
+                                SmallChange="0.05" LargeChange="0.1" VerticalAlignment="Center"
+                                ValueChanged="SliderOpacity_ValueChanged" ToolTip="위젯 전체 투명도 조절"/>
+                        
+                        <!-- Startup Checkbox -->
+                        <CheckBox x:Name="ChkStartup" Content="시작프로그램" Foreground="#DDFFFFFF" FontSize="11" 
+                                  VerticalAlignment="Center" Margin="14,0,0,0" Checked="ChkStartup_Checked" Unchecked="ChkStartup_Unchecked"
+                                  ToolTip="윈도우 부팅 시 자동 실행 여부"/>
+                    </StackPanel>
+
+                    <!-- Center: Month Navigation & Header -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <Button x:Name="BtnPrevMonth" Content="◀" Style="{StaticResource IconBtnStyle}" Width="26" Height="26" Click="BtnPrevMonth_Click"/>
+                        <TextBlock x:Name="TxtCurrentMonth" Text="2026년 9월" Foreground="White" FontSize="15" FontWeight="Bold" Margin="12,0" VerticalAlignment="Center"/>
+                        <Button x:Name="BtnNextMonth" Content="▶" Style="{StaticResource IconBtnStyle}" Width="26" Height="26" Click="BtnNextMonth_Click"/>
+                        <Button x:Name="BtnToday" Content="오늘" Style="{StaticResource IconBtnStyle}" Height="26" Margin="8,0,0,0" Click="BtnToday_Click"/>
+                    </StackPanel>
+
+                    <!-- Right: Pin Button & Minimize/Exit -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                        <!-- Weekly Routine Widget Toggle -->
+                        <ToggleButton x:Name="BtnRoutine" Content="🔁 루틴" Style="{StaticResource RoutineBtnStyle}" Height="26" Margin="0,0,6,0"
+                                      Checked="BtnRoutine_Checked" Unchecked="BtnRoutine_Unchecked" ToolTip="요일별 루틴 창 열기 / 닫기"/>
+
+                        <!-- Pin Toggle Button (locks window positions only) -->
+                        <ToggleButton x:Name="BtnPin" Content="📌 고정" Style="{StaticResource PinBtnStyle}" Height="26"
+                                      Checked="BtnPin_Checked" Unchecked="BtnPin_Unchecked" ToolTip="고정 시 모든 위젯 창의 위치 이동 잠금"/>
+                        
+                        <!-- Close / Exit Widget -->
+                        <Button x:Name="BtnExit" Content="✕" Width="26" Height="26" Style="{StaticResource IconBtnStyle}" 
+                                Click="BtnExit_Click" ToolTip="위젯 종료"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- DAY OF WEEK HEADER -->
+                <UniformGrid DockPanel.Dock="Top" Rows="1" Columns="7" Height="28" Background="#440D1B2A">
+                    <TextBlock Text="일" Foreground="#FF8080" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="월" Foreground="#EEEEEE" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="화" Foreground="#EEEEEE" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="수" Foreground="#EEEEEE" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="목" Foreground="#EEEEEE" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="금" Foreground="#EEEEEE" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock Text="토" Foreground="#80B3FF" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </UniformGrid>
+
+                <!-- CALENDAR DAYS GRID (7x6 UniformGrid) -->
+                <UniformGrid x:Name="CalendarGrid" Rows="6" Columns="7" Margin="4"/>
+            </DockPanel>
+
+            <!-- EDIT POPUP (like DesktopCal cell double-click editor) -->
+            <Grid x:Name="CellEditOverlay" Visibility="Collapsed" Background="#22000000" MouseLeftButtonDown="CellEditOverlay_MouseDown">
+                <Border x:Name="CellEditCard" Width="260" Height="200" Background="#FFFFFFFF" CornerRadius="6" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="#999999" BorderThickness="1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" Opacity="0.4" ShadowDepth="3"/>
+                    </Border.Effect>
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header with Date and Close Checkmark -->
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                            <TextBlock x:Name="TxtEditDateTitle" Text="2026-09-07" FontWeight="Bold" FontSize="13" Foreground="#2C3E50" VerticalAlignment="Center"/>
+                            <Button Content="✓ 완료" Width="55" Height="24" HorizontalAlignment="Right" Background="#2ECC71" Foreground="White" 
+                                    BorderThickness="0" Cursor="Hand" Click="BtnSaveCellEdit_Click"/>
+                        </DockPanel>
+
+                        <!-- Textbox for To-do / Note -->
+                        <TextBox x:Name="TxtEditContent" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap" 
+                                 VerticalScrollBarVisibility="Auto" BorderBrush="#D0D0D0" Padding="6" FontSize="12"
+                                 Background="#FAFAFA" Foreground="#222222"/>
+
+                        <!-- Footer -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                            <Button Content="지우기" Width="50" Height="22" Margin="0,0,6,0" Background="#E74C3C" Foreground="White" 
+                                    BorderThickness="0" Cursor="Hand" Click="BtnClearCellEdit_Click"/>
+                            <Button Content="취소" Width="45" Height="22" Background="#95A5A6" Foreground="White" 
+                                    BorderThickness="0" Cursor="Hand" Click="BtnCancelCellEdit_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

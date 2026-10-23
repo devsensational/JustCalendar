@@ -1,0 +1,109 @@
+<Window x:Class="DesktopCalendarWidget.RoutineWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Weekly Routine"
+        Width="920" Height="200"
+        MinWidth="560" MinHeight="170"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        ResizeMode="CanResizeWithGrip"
+        Loaded="Window_Loaded"
+        Closed="Window_Closed"
+        LocationChanged="Window_LocationChanged"
+        SizeChanged="Window_SizeChanged">
+
+    <Window.Resources>
+        <!-- Same flat button look as the main calendar top bar -->
+        <Style x:Key="IconBtnStyle" TargetType="Button">
+            <Setter Property="Background" Value="#33FFFFFF"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="6,2"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#66FFFFFF"/>
+                </Trigger>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <!-- Routine Widget Container (same look as the main calendar) -->
+    <Border x:Name="RootBorder" Background="#551B2A4A" CornerRadius="10" BorderBrush="#66FFFFFF" BorderThickness="1">
+        <Grid>
+            <DockPanel>
+                <!-- TITLE BAR (drag to move) -->
+                <Grid x:Name="TitleBar" DockPanel.Dock="Top" Height="32" Background="#770D1B2A"
+                      MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <TextBlock Text="🔁 요일별 루틴" Foreground="White" FontSize="13" FontWeight="Bold" VerticalAlignment="Center"/>
+                        <TextBlock Text="요일 칸을 더블클릭해서 편집 · 매주 반복됩니다" Foreground="#99FFFFFF" FontSize="11"
+                                   VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    </StackPanel>
+
+                    <Button x:Name="BtnClose" Grid.Column="1" Content="✕" Width="24" Height="22" Margin="0,0,8,0"
+                            Style="{StaticResource IconBtnStyle}" Click="BtnClose_Click" ToolTip="루틴 창 닫기"/>
+                </Grid>
+
+                <!-- ROUTINE COLUMNS (Mon ~ Sun) -->
+                <UniformGrid x:Name="RoutineGrid" Rows="1" Columns="7" Margin="4"/>
+            </DockPanel>
+
+            <!-- EDIT POPUP (same style as the calendar cell editor) -->
+            <Grid x:Name="EditOverlay" Visibility="Collapsed" Background="#22000000" MouseLeftButtonDown="EditOverlay_MouseDown">
+                <Border x:Name="EditCard" Width="280" MaxHeight="260" Margin="0,8" Background="#FFFFFFFF" CornerRadius="6"
+                        HorizontalAlignment="Center" VerticalAlignment="Stretch" BorderBrush="#999999" BorderThickness="1">
+                    <Border.Effect>
+                        <DropShadowEffect BlurRadius="12" Opacity="0.4" ShadowDepth="3"/>
+                    </Border.Effect>
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header with Day name and Save -->
+                        <DockPanel Grid.Row="0" Margin="0,0,0,8">
+                            <TextBlock x:Name="TxtEditTitle" Text="월요일 루틴" FontWeight="Bold" FontSize="13" Foreground="#2C3E50" VerticalAlignment="Center"/>
+                            <Button Content="✓ 완료" Width="55" Height="24" HorizontalAlignment="Right" Background="#2ECC71" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand" Click="BtnSaveEdit_Click"/>
+                        </DockPanel>
+
+                        <!-- Routine text -->
+                        <TextBox x:Name="TxtEditContent" Grid.Row="1" AcceptsReturn="True" TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" BorderBrush="#D0D0D0" Padding="6" FontSize="12"
+                                 Background="#FAFAFA" Foreground="#222222"/>
+
+                        <!-- Footer -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+                            <Button Content="지우기" Width="50" Height="22" Margin="0,0,6,0" Background="#E74C3C" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand" Click="BtnClearEdit_Click"/>
+                            <Button Content="취소" Width="45" Height="22" Background="#95A5A6" Foreground="White"
+                                    BorderThickness="0" Cursor="Hand" Click="BtnCancelEdit_Click"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

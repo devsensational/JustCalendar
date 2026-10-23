@@ -1,0 +1,41 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm64/
+publish/
+*.nupkg
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.rsuser
+
+# JetBrains Rider
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Test results / coverage
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+coverage*.json
+coverage*.xml
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Logs / temp
+*.log
+*.tmp
