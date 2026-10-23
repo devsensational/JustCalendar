@@ -2,6 +2,8 @@
 
 Windows 바탕화면 위에 상주하며 일정 관리 및 스티커 메모를 작성할 수 있는 **DesktopCal 스타일**의 C# .NET 8 WPF 위젯 프로그램입니다.
 
+> 🤖 **AI 생성 고지**: 이 프로젝트의 코드와 문서는 AI(Anthropic의 Claude)를 활용하여 생성되었습니다.
+
 ---
 
 ## 📌 주요 기능 구현 사항
@@ -53,5 +55,13 @@ dotnet run --project DesktopCalendarWidget
 
 단일 실행 파일(Single File)로 배포하려면 (같은 `JustCalendar` 폴더에서):
 ```bash
-dotnet publish DesktopCalendarWidget -c Release -r win-x64 --self-contained false -p:PublishSingleFile=true
+# .NET 런타임 포함 (.NET 설치 없이 실행 가능, 용량 큼)
+dotnet publish DesktopCalendarWidget -p:PublishProfile=Portable
+# → DesktopCalendarWidget/bin/publish/portable/DesktopCalendarWidget-portable.exe
+
+# .NET 런타임 미포함 (.NET 8 Desktop Runtime 필요, 용량 작음)
+dotnet publish DesktopCalendarWidget -p:PublishProfile=Portable-net8
+# → DesktopCalendarWidget/bin/publish/portable-net8/DesktopCalendarWidget-portable-net8.exe
 ```
+각 출력 폴더에는 exe 파일 하나만 생성됩니다.
+Visual Studio에서는 프로젝트 우클릭 → **게시**에서 같은 프로필을 선택할 수 있습니다.
