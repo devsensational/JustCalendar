@@ -10,10 +10,13 @@ namespace DesktopCalendarWidget;
 public partial class MainWindow : Window
 {
     private DateTime _displayedMonth;
-    private readonly List<MemoWindow> _activeMemos = new();
+    // Shown memo widgets, keyed by MemoData.Id (hidden memos have no window)
+    private readonly Dictionary<string, MemoWindow> _memoWindows = new();
+    private MemoListWindow? _memoListWindow = null;
     private RoutineWindow? _routineWindow = null;
     private DateTime? _currentlyEditingDate = null;
     private bool _isLoaded = false;
+    private bool _isClosing = false;
 
     public MainWindow()
     {
@@ -37,23 +40,24 @@ public partial class MainWindow : Window
 
         ApplyPinState(cfg.IsPinned);
 
-        // Keep at bottom of desktop
-        WindowHelper.SendToDesktopBottom(this);
-
         // Render Calendar
         RenderCalendar();
 
-        // Restore Memos
-        RestoreMemos();
-
         // Restore Weekly Routine widget (Checked handler opens it)
         BtnRoutine.IsChecked = cfg.IsRoutineVisible;
+
+        // Restore Memos after the routine widget so they stack above it
+        RestoreMemos();
+
+        // Keep the whole widget group (calendar + owned routine/memos) at bottom of desktop
+        WindowHelper.SendToDesktopBottom(this);
 
         _isLoaded = true;
     }
 
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
+        _isClosing = true;
         SaveCurrentState();
         DataManager.SaveData();
     }
@@ -108,7 +112,7 @@ public partial class MainWindow : Window
         BtnPin.Content = pinned ? "🔒 고정됨" : "📌 고정";
 
         // Notify all memo windows to lock/unlock their position
-        foreach (var memo in _activeMemos)
+        foreach (var memo in _memoWindows.Values)
         {
             memo.SetPinned(pinned);
         }
@@ -126,7 +130,7 @@ public partial class MainWindow : Window
         DataManager.Config.Opacity = e.NewValue;
         
         // Also update open memos opacity to match
-        foreach (var memo in _activeMemos)
+        foreach (var memo in _memoWindows.Values)
         {
             memo.Opacity = e.NewValue;
         }
@@ -328,44 +332,110 @@ public partial class MainWindow : Window
     }
     #endregion
 
-    #region Memo Window Management
-    private void BtnAddMemo_Click(object sender, RoutedEventArgs e)
+    #region Memo Management
+    private void BtnMemoList_Click(object sender, RoutedEventArgs e)
     {
-        var memoData = new MemoData
+        if (_memoListWindow != null)
         {
-            Left = this.Left + 50 + (_activeMemos.Count * 25),
-            Top = this.Top + 50 + (_activeMemos.Count * 25),
+            _memoListWindow.Activate();
+            return;
+        }
+
+        var window = new MemoListWindow(this);
+        window.Closed += (s, e) => _memoListWindow = null;
+        _memoListWindow = window;
+        window.Show();
+    }
+
+    /// <summary>Creates a new memo, shows it on top of the other widgets and saves.</summary>
+    public MemoData AddMemo()
+    {
+        int offset = _memoWindows.Count * 25;
+        var data = new MemoData
+        {
+            Left = this.Left + 50 + offset,
+            Top = this.Top + 50 + offset,
             Width = 260,
-            Height = 240
+            Height = 240,
+            IsVisible = true
         };
 
-        CreateAndShowMemo(memoData);
-        SaveCurrentState();
+        DataManager.Config.Memos.Add(data);
+        ShowMemoWindow(data);
         DataManager.SaveData();
+        return data;
+    }
+
+    /// <summary>Permanently removes a memo (closes its widget if shown) and saves.</summary>
+    public void DeleteMemo(MemoData data)
+    {
+        DataManager.Config.Memos.Remove(data);
+        if (_memoWindows.TryGetValue(data.Id, out var window))
+        {
+            window.Close();
+        }
+        DataManager.SaveData();
+    }
+
+    /// <summary>Shows or hides a memo widget. The memo itself is kept either way.</summary>
+    public void SetMemoVisible(MemoData data, bool visible)
+    {
+        if (visible)
+        {
+            data.IsVisible = true;
+            ShowMemoWindow(data);
+            DataManager.SaveData();
+        }
+        else if (_memoWindows.TryGetValue(data.Id, out var window))
+        {
+            // Closed handler marks it hidden and saves
+            window.Close();
+        }
+        else
+        {
+            data.IsVisible = false;
+            DataManager.SaveData();
+        }
     }
 
     private void RestoreMemos()
     {
         foreach (var memoData in DataManager.Config.Memos)
         {
-            CreateAndShowMemo(memoData);
+            if (memoData.IsVisible)
+            {
+                ShowMemoWindow(memoData);
+            }
         }
     }
 
-    private void CreateAndShowMemo(MemoData data)
+    private void ShowMemoWindow(MemoData data)
     {
+        if (_memoWindows.TryGetValue(data.Id, out var existing))
+        {
+            existing.Activate();
+            return;
+        }
+
         var memo = new MemoWindow(data);
+        memo.Owner = this; // Group with the calendar (one Alt+Tab entry, always above calendar)
         memo.Opacity = DataManager.Config.Opacity;
         memo.SetPinned(DataManager.Config.IsPinned);
 
+        memo.ContentChanged += (s, e) => _memoListWindow?.Refresh();
         memo.Closed += (s, e) =>
         {
-            _activeMemos.Remove(memo);
-            SaveCurrentState();
+            // Owned windows close along with the calendar on exit; keep their saved state
+            if (_isClosing) return;
+
+            _memoWindows.Remove(data.Id);
+            data.IsVisible = false;
             DataManager.SaveData();
+            _memoListWindow?.Refresh();
         };
 
-        _activeMemos.Add(memo);
+        _memoWindows[data.Id] = memo;
+        // Shown (and activated) last, so it lands above the calendar and routine widgets
         memo.Show();
     }
 
@@ -377,13 +447,11 @@ public partial class MainWindow : Window
         DataManager.Config.MainWindowHeight = this.Height;
         DataManager.Config.Opacity = this.Opacity;
 
-        // Collect all memo states
-        var memoList = new List<MemoData>();
-        foreach (var m in _activeMemos)
+        // Shown memos write their window geometry/content back into their MemoData
+        foreach (var m in _memoWindows.Values)
         {
-            memoList.Add(m.GetMemoData());
+            m.GetMemoData();
         }
-        DataManager.Config.Memos = memoList;
     }
     #endregion
 
@@ -433,6 +501,7 @@ public partial class MainWindow : Window
         }
 
         var window = new RoutineWindow();
+        window.Owner = this; // Group with the calendar (one Alt+Tab entry, activated together)
         window.Opacity = cfg.Opacity;
         window.SetPinned(cfg.IsPinned);
 
@@ -453,6 +522,7 @@ public partial class MainWindow : Window
 
     private void BtnExit_Click(object sender, RoutedEventArgs e)
     {
+        _isClosing = true;
         SaveCurrentState();
         DataManager.SaveData();
         Application.Current.Shutdown();

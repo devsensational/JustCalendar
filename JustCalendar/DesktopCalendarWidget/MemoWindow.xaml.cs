@@ -10,10 +10,16 @@ public partial class MemoWindow : Window
     private bool _isPinned = false;
     private double _previousHeight = 240;
 
+    /// <summary>Raised when the memo text changes (so the memo list can update its preview).</summary>
+    public event EventHandler? ContentChanged;
+
     public MemoWindow(MemoData data)
     {
         InitializeComponent();
         _data = data;
+
+        // Only the main calendar should show up in Alt+Tab
+        SourceInitialized += (s, e) => WindowHelper.HideFromAltTab(this);
     }
 
     private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -29,7 +35,8 @@ public partial class MemoWindow : Window
             ApplyMinimize(true);
         }
 
-        WindowHelper.SendToDesktopBottom(this);
+        // Not sent to the bottom: a newly shown memo must stay above the calendar and routine widgets.
+        // (The main window sends the whole widget group to the bottom on startup.)
     }
 
     public void SetPinned(bool pinned)
@@ -73,6 +80,7 @@ public partial class MemoWindow : Window
 
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
+        // Hides the widget only; the memo stays in the list (MainWindow marks it as not visible)
         this.Close();
     }
 
@@ -80,6 +88,7 @@ public partial class MemoWindow : Window
     {
         _data.Content = TxtMemoContent.Text;
         DataManager.SaveData();
+        ContentChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void Window_LocationChanged(object sender, EventArgs e)

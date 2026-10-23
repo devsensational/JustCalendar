@@ -60,7 +60,7 @@
                             Foreground="#5D4037" Click="BtnMinimize_Click" ToolTip="최소화 / 펼치기"/>
                     <!-- Close Button -->
                     <Button x:Name="BtnClose" Content="✕" Style="{StaticResource MiniBtnStyle}" 
-                            Foreground="#C0392B" Click="BtnClose_Click" ToolTip="메모 삭제"/>
+                            Foreground="#C0392B" Click="BtnClose_Click" ToolTip="메모 숨기기 (메모 목록에서 다시 표시)"/>
                 </StackPanel>
             </Grid>
 

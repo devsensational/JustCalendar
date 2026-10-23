@@ -34,6 +34,9 @@ public partial class RoutineWindow : Window
     {
         InitializeComponent();
 
+        // Only the main calendar should show up in Alt+Tab
+        SourceInitialized += (s, e) => WindowHelper.HideFromAltTab(this);
+
         // Restore position/size before the window is shown (avoids a visible jump)
         var cfg = DataManager.Config;
         if (cfg.RoutineWindowLeft.HasValue) this.Left = cfg.RoutineWindowLeft.Value;

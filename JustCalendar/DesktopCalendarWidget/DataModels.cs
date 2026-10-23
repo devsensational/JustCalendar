@@ -17,7 +17,7 @@ public class AppConfig
     // Key: "yyyy-MM-dd", Value: text note
     public Dictionary<string, string> DayNotes { get; set; } = new();
 
-    // List of active memo stickies
+    // All saved memos (shown or hidden). Managed from the memo list window.
     public List<MemoData> Memos { get; set; } = new();
 
     // Weekly routine widget
@@ -41,4 +41,6 @@ public class MemoData
     public double Height { get; set; } = 240;
     public string Content { get; set; } = string.Empty;
     public bool IsMinimized { get; set; } = false;
+    // Shown as a desktop widget. Defaults to true so memos saved by older versions stay visible.
+    public bool IsVisible { get; set; } = true;
 }

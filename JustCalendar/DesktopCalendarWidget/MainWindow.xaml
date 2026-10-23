@@ -108,11 +108,11 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Left: Memo Add (+), Opacity Slider -->
+                    <!-- Left: Memo List, Opacity Slider -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0">
-                        <!-- Add Memo Button -->
-                        <Button x:Name="BtnAddMemo" Content="＋ 메모" Width="60" Height="26" Style="{StaticResource IconBtnStyle}" 
-                                Click="BtnAddMemo_Click" ToolTip="새 독립 메모장 생성"/>
+                        <!-- Memo List Button -->
+                        <Button x:Name="BtnMemoList" Content="📝 메모" Width="60" Height="26" Style="{StaticResource IconBtnStyle}"
+                                Click="BtnMemoList_Click" ToolTip="메모 목록 열기 (추가 / 삭제 / 표시)"/>
 
                         <TextBlock Text="투명도" Foreground="#CCFFFFFF" FontSize="11" VerticalAlignment="Center" Margin="12,0,6,0"/>
                         <!-- Opacity Slider -->
